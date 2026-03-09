@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+*.egg-info/
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov/
+.tox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+docs/
+*.md
+
+# CI/CD
+.github/
+Jenkinsfile
+
+# Docker
+docker-compose.yml
+Dockerfile
+
+# Misc
+.env
+.env.*
+*.tmp
