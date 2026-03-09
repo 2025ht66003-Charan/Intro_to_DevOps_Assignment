@@ -18,7 +18,6 @@ progress_records = {}
 
 
 class FitnessProgram:
-    """Represents a fitness program."""
     
     PROGRAMS = {
         "Fat Loss (FL)": {
@@ -81,15 +80,11 @@ class Client:
             "notes": self.notes
         }
 
-
-# ===== HEALTH CHECK =====
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint."""
     return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()}), 200
 
-
-# ===== CLIENT ENDPOINTS =====
 
 @app.route('/api/clients', methods=['POST'])
 def create_client():
@@ -204,9 +199,6 @@ def delete_client(client_id):
         logger.error(f"Error deleting client: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
-# ===== PROGRAM ENDPOINTS =====
-
 @app.route('/api/programs', methods=['GET'])
 def get_programs():
     """Get all available fitness programs."""
@@ -228,9 +220,6 @@ def get_program(program_name):
     except Exception as e:
         logger.error(f"Error fetching program: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
-
-# ===== CALCULATION ENDPOINTS =====
 
 @app.route('/api/calculate-calories', methods=['POST'])
 def calculate_calories():
@@ -255,9 +244,6 @@ def calculate_calories():
     except Exception as e:
         logger.error(f"Error calculating calories: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
-
-# ===== PROGRESS TRACKING =====
 
 @app.route('/api/progress/<client_id>', methods=['POST'])
 def log_progress(client_id):
@@ -309,8 +295,6 @@ def get_progress(client_id):
         logger.error(f"Error fetching progress: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
-# ===== ERROR HANDLERS =====
 
 @app.errorhandler(400)
 def bad_request(error):
