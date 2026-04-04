@@ -1,0 +1,100 @@
+from flask import Flask, jsonify, request, abort
+from flask_cors import CORS
+import sqlite3
+import logging
+from datetime import datetime
+
+app = Flask(__name__)
+CORS(app)
+logging.basicConfig(level=logging.INFO)
+DB_PATH = "aceest_2_1_2.db"
+
+PROGRAMS = {
+    "Fat Loss (FL)": {"factor": 22},
+    "Muscle Gain (MG)": {"factor": 35},
+    "Beginner (BG)": {"factor": 26}
+}
+
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("CREATE TABLE IF NOT EXISTS clients (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, age INTEGER, weight REAL, program TEXT, calories INTEGER)")
+    cur.execute("CREATE TABLE IF NOT EXISTS progress (id INTEGER PRIMARY KEY AUTOINCREMENT, client_name TEXT, week TEXT, adherence INTEGER)")
+    conn.commit()
+    conn.close()
+
+@app.route("/")
+def index():
+    return jsonify({"version": "2.1.2", "description": "Persistent client and progress tracking"})
+
+@app.route("/programs")
+def list_programs():
+    return jsonify({"programs": PROGRAMS}), 200
+
+@app.route("/calculate", methods=["POST"])
+def calculate():
+    payload = request.get_json() or {}
+    program = payload.get("program")
+    weight = payload.get("weight")
+    if not program or weight is None:
+        abort(400, description="program and weight required")
+    if program not in PROGRAMS:
+        abort(404, description="Program not found")
+    return jsonify({"calories": int(weight * PROGRAMS[program]["factor"])}), 200
+
+@app.route("/clients", methods=["GET", "POST"])
+def manage_clients():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    if request.method == "POST":
+        payload = request.get_json() or {}
+        name = payload.get("name")
+        program = payload.get("program")
+        if not name or not program:
+            conn.close()
+            abort(400, description="name and program required")
+        weight = payload.get("weight")
+        age = payload.get("age")
+        calories = int(weight * PROGRAMS[program]["factor"]) if weight is not None else None
+        cur.execute("INSERT OR REPLACE INTO clients (name, age, weight, program, calories) VALUES (?, ?, ?, ?, ?)", (name, age, weight, program, calories))
+        conn.commit()
+        conn.close()
+        return jsonify({"saved": payload}), 201
+    cur.execute("SELECT name, age, weight, program, calories FROM clients")
+    rows = cur.fetchall()
+    conn.close()
+    return jsonify({"clients": [dict(zip(["name", "age", "weight", "program", "calories"], row)) for row in rows]}), 200
+
+@app.route("/progress", methods=["GET", "POST"])
+def progress():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    if request.method == "POST":
+        payload = request.get_json() or {}
+        client_name = payload.get("client_name")
+        adherence = payload.get("adherence")
+        if not client_name or adherence is None:
+            conn.close()
+            abort(400, description="client_name and adherence required")
+        week = datetime.now().strftime("Week %U - %Y")
+        cur.execute("INSERT INTO progress (client_name, week, adherence) VALUES (?, ?, ?)", (client_name, week, int(adherence)))
+        conn.commit()
+        conn.close()
+        return jsonify({"saved": payload}), 201
+    cur.execute("SELECT client_name, week, adherence FROM progress")
+    rows = cur.fetchall()
+    conn.close()
+    return jsonify({"progress": [dict(zip(["client_name", "week", "adherence"], row)) for row in rows]}), 200
+
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({"error": str(error)}), 400
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": str(error)}), 404
+
+if __name__ == "__main__":
+    init_db()
+    app.run(debug=True, host="0.0.0.0", port=5004)
