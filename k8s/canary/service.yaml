@@ -1,0 +1,20 @@
+# Canary Service — routes to ALL pods with label app=aceest-fitness-gym
+# Both stable and canary pods share this selector; traffic splits by replica count.
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-service
+  namespace: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    strategy: canary
+spec:
+  type: NodePort
+  selector:
+    app: aceest-fitness-gym   # matches both stable and canary pods
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+      nodePort: 30080

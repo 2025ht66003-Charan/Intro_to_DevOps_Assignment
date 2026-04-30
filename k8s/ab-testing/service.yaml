@@ -1,0 +1,86 @@
+# A/B Testing Services
+# Each version gets its own ClusterIP service.
+# An Ingress with canary annotations splits traffic between them.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-service-a
+  namespace: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    variant: version-a
+spec:
+  type: ClusterIP
+  selector:
+    app: aceest-fitness-gym
+    variant: version-a
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-service-b
+  namespace: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    variant: version-b
+spec:
+  type: ClusterIP
+  selector:
+    app: aceest-fitness-gym
+    variant: version-b
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+---
+# Primary ingress — routes to Version A (stable)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aceest-ingress-a
+  namespace: aceest-gym
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: aceest.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: aceest-service-a
+                port:
+                  number: 80
+---
+# Canary ingress — routes 50% of traffic to Version B
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aceest-ingress-b
+  namespace: aceest-gym
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "50"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: aceest.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: aceest-service-b
+                port:
+                  number: 80

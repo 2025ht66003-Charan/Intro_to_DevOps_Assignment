@@ -1,21 +1,64 @@
 version: '3.8'
 
 services:
+
+  # Main Flask application
   flask-app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fitness-gym-app
+    container_name: aceest-fitness-gym
+    image: aceest-fitness-gym:latest
     ports:
       - "5000:5000"
     environment:
       - FLASK_ENV=production
       - PYTHONUNBUFFERED=1
-    volumes:
-      - .:/app
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import requests; requests.get('http://localhost:5000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     restart: unless-stopped
     networks:
       - fitness-network
+
+  # SonarQube for static code analysis
+  sonarqube:
+    image: sonarqube:10.4-community
+    container_name: aceest-sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    networks:
+      - fitness-network
+    profiles:
+      - sonarqube
+
+  # Prometheus for metrics scraping (optional observability)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: aceest-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - fitness-network
+    profiles:
+      - monitoring
+
+volumes:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:
 
 networks:
   fitness-network:
