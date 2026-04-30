@@ -5,12 +5,11 @@ WORKDIR /app
 # Create non-root user for security
 RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -m appuser
 
-# Copy pre-downloaded wheels and requirements
-COPY wheels/ ./wheels/
+# Copy requirements
 COPY requirements.txt .
 
-# Install from local wheels — no internet access required
-RUN pip install --no-cache-dir --no-index --find-links=./wheels -r requirements.txt
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
