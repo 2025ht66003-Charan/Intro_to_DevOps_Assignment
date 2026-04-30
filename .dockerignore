@@ -39,9 +39,9 @@ Jenkinsfile
 
 # Docker
 docker-compose.yml
-Dockerfile
 
 # Misc
 .env
 .env.*
 *.tmp
+

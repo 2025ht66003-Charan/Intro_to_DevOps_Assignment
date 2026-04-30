@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    environment: production

@@ -1,0 +1,58 @@
+# Shadow Deployment — SHADOW instance (receives mirrored traffic, no user responses)
+#
+# Shadow receives a copy of all production requests for testing.
+# Responses are discarded — users never see shadow output.
+# Configure traffic mirroring with Istio VirtualService (mirror field)
+# or an Nginx/Envoy proxy configured to duplicate requests.
+#
+# Replace IMAGE_PLACEHOLDER with the new version image tag.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-shadow
+  namespace: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    role: shadow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aceest-fitness-gym
+      role: shadow
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness-gym
+        role: shadow
+    spec:
+      containers:
+        - name: aceest-app
+          image: IMAGE_PLACEHOLDER
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            - name: FLASK_ENV
+              value: "shadow"
+            - name: SHADOW_MODE
+              value: "true"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
