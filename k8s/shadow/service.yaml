@@ -1,0 +1,41 @@
+# Shadow Service — routes user traffic only to PRIMARY pods
+# Shadow pods are accessible internally via aceest-shadow-svc for mirroring.
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-service
+  namespace: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    strategy: shadow
+spec:
+  type: NodePort
+  selector:
+    app: aceest-fitness-gym
+    role: primary         # only primary receives user traffic
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+      nodePort: 30080
+---
+# Internal service for shadow — used by mirroring proxy only
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-shadow-svc
+  namespace: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    role: shadow
+spec:
+  type: ClusterIP
+  selector:
+    app: aceest-fitness-gym
+    role: shadow
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5000
+      targetPort: 5000

@@ -1,0 +1,61 @@
+# Blue-Green Deployment — GREEN (new version) slot
+#
+# Deploy this first, validate health, then switch the service selector.
+# Replace IMAGE_PLACEHOLDER with the Jenkins build: ${DOCKER_HUB_REPO}:${APP_VERSION}
+#
+# Switch traffic to green:
+#   kubectl patch service aceest-service -p '{"spec":{"selector":{"slot":"green"}}}'
+# Roll back to blue:
+#   kubectl patch service aceest-service -p '{"spec":{"selector":{"slot":"blue"}}}'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-green
+  namespace: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    slot: green
+    version: new
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aceest-fitness-gym
+      slot: green
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness-gym
+        slot: green
+        version: new
+    spec:
+      containers:
+        - name: aceest-app
+          image: IMAGE_PLACEHOLDER
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            - name: FLASK_ENV
+              value: "production"
+            - name: APP_SLOT
+              value: "green"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10

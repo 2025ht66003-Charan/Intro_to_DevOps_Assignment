@@ -1,0 +1,87 @@
+# Rolling Update Deployment
+#
+# Kubernetes default strategy. Replaces pods incrementally — no downtime.
+# maxUnavailable=1 ensures at least 2 pods serve traffic at all times (with 3 replicas).
+# maxSurge=1 allows a temporary 4th pod during the transition.
+#
+# To trigger a rolling update from the Jenkinsfile:
+#   kubectl set image deployment/aceest-rolling aceest-app=<new-image>
+# Monitor progress:
+#   kubectl rollout status deployment/aceest-rolling
+# Roll back:
+#   kubectl rollout undo deployment/aceest-rolling
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-rolling
+  namespace: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    strategy: rolling-update
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aceest-fitness-gym
+      strategy: rolling-update
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness-gym
+        strategy: rolling-update
+    spec:
+      containers:
+        - name: aceest-app
+          image: your-dockerhub-username/aceest-fitness-gym:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            - name: FLASK_ENV
+              value: "production"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-rolling-svc
+  namespace: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    strategy: rolling-update
+spec:
+  type: NodePort
+  selector:
+    app: aceest-fitness-gym
+    strategy: rolling-update
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+      nodePort: 30081

@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Generated reports (local only, not committed)
+sonarqube_report.pdf
+submission_report.pdf
+download_reports.html

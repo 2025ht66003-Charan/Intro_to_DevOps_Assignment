@@ -1,37 +1,25 @@
-FROM python:3.11.15-alpine3.23 AS builder
-
-WORKDIR /app
-
-# Install system dependencies
-RUN apk add --no-cache gcc
-
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
-
-
-# Stage 2: Runtime
-FROM python:3.11.15-alpine3.23
+FROM python:3.11-slim
 
 WORKDIR /app
 
 # Create non-root user for security
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser
+RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -m appuser
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /home/appuser/.local
+# Copy pre-downloaded wheels and requirements
+COPY wheels/ ./wheels/
+COPY requirements.txt .
+
+# Install from local wheels — no internet access required
+RUN pip install --no-cache-dir --no-index --find-links=./wheels -r requirements.txt
 
 # Set environment variables
-ENV PATH=/home/appuser/.local/bin:$PATH \
-    PYTHONUNBUFFERED=1 \
+ENV PYTHONUNBUFFERED=1 \
     FLASK_APP=app.py \
     FLASK_ENV=production
 
 # Copy application files
 COPY --chown=appuser:appuser app.py .
 COPY --chown=appuser:appuser test_app.py .
-COPY --chown=appuser:appuser requirements.txt .
 
 # Switch to non-root user
 USER appuser

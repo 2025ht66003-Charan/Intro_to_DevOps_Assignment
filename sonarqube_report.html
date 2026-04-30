@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonarQube Report — ACEest Fitness &amp; Gym</title>
+<style>
+  :root {
+    --sonar-blue: #4c9be8;
+    --sonar-dark: #1f2d3d;
+    --sonar-green: #00aa44;
+    --sonar-red: #d4333f;
+    --sonar-orange: #ed7d20;
+    --sonar-yellow: #f4d00c;
+    --bg: #f3f3f3;
+    --card: #ffffff;
+    --border: #e0e0e0;
+    --text: #333333;
+    --text-light: #666666;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+  /* ── Header ── */
+  .header { background: var(--sonar-dark); color: #fff; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .header-logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
+  .header-logo .sq { color: var(--sonar-blue); font-size: 22px; }
+  .header-meta { font-size: 12px; color: #aaa; }
+
+  /* ── Project Banner ── */
+  .banner { background: #263248; color: #fff; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .banner-title { font-size: 20px; font-weight: 600; }
+  .banner-sub { font-size: 12px; color: #aaa; margin-top: 4px; }
+  .quality-gate { text-align: center; background: var(--sonar-green); border-radius: 8px; padding: 10px 24px; }
+  .quality-gate .qg-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .quality-gate .qg-value { font-size: 20px; font-weight: 700; }
+
+  /* ── Layout ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--sonar-blue); color: var(--sonar-dark); }
+
+  /* ── Metric Cards ── */
+  .metrics-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 28px; }
+  .metric-card { background: var(--card); border-radius: 8px; padding: 18px; border: 1px solid var(--border); text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+  .metric-value { font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+  .metric-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric-sub { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+  .mv-green { color: var(--sonar-green); }
+  .mv-red { color: var(--sonar-red); }
+  .mv-orange { color: var(--sonar-orange); }
+  .mv-blue { color: var(--sonar-blue); }
+  .mv-gray { color: #888; }
+
+  /* ── Rating badges ── */
+  .rating { display: inline-block; border-radius: 4px; padding: 4px 10px; font-weight: 700; font-size: 20px; color: #fff; }
+  .r-a { background: var(--sonar-green); }
+  .r-b { background: #85bb2f; }
+  .r-c { background: var(--sonar-yellow); color: #333; }
+  .r-d { background: var(--sonar-orange); }
+  .r-e { background: var(--sonar-red); }
+
+  /* ── Coverage bar ── */
+  .coverage-bar { background: #e0e0e0; border-radius: 4px; height: 10px; margin-top: 8px; overflow: hidden; }
+  .coverage-fill { height: 100%; border-radius: 4px; background: var(--sonar-green); }
+
+  /* ── Tables ── */
+  .card { background: var(--card); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); overflow: hidden; }
+  .card-header { padding: 14px 18px; background: #f8f9fa; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .card-body { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: #f0f4f8; }
+  th { padding: 10px 14px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-light); border-bottom: 1px solid var(--border); }
+  td { padding: 9px 14px; border-bottom: 1px solid #f0f0f0; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+
+  /* ── Badges ── */
+  .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .pass { background: #e6f9ed; color: var(--sonar-green); }
+  .fail { background: #fde8ea; color: var(--sonar-red); }
+
+  .sev-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; }
+  .sev-critical { background: #fde8ea; color: var(--sonar-red); }
+  .sev-major    { background: #fff0e0; color: var(--sonar-orange); }
+  .sev-minor    { background: #e8f4fd; color: var(--sonar-blue); }
+  .sev-warning  { background: #fffbe6; color: #b8860b; }
+
+  .issue-type { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; background: #eef2f7; color: var(--sonar-dark); }
+  .it-code_smell { background: #eef2f7; color: #4a5568; }
+  .it-bug { background: #fde8ea; color: var(--sonar-red); }
+
+  .grade-badge { display: inline-block; width: 28px; text-align: center; padding: 3px 0; border-radius: 4px; font-weight: 700; font-size: 14px; color: #fff; }
+  .grade-a { background: var(--sonar-green); }
+  .grade-b { background: #85bb2f; }
+  .grade-c { background: var(--sonar-orange); }
+
+  /* ── Two-col layout ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* ── Summary strips ── */
+  .summary-strip { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .strip-item { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px 18px; min-width: 160px; text-align: center; }
+  .strip-item .si-val { font-size: 24px; font-weight: 700; }
+  .strip-item .si-lbl { font-size: 11px; color: var(--text-light); text-transform: uppercase; }
+
+  /* ── Footer ── */
+  .footer { background: var(--sonar-dark); color: #aaa; padding: 16px 24px; text-align: center; font-size: 12px; margin-top: 32px; }
+  code { font-family: 'Courier New', monospace; background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+
+  /* ── Print ── */
+  @media print {
+    .header, .banner { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-logo">
+    <span class="sq">&#9679;</span> SonarQube
+    <span style="font-size:13px;font-weight:400;color:#aaa;margin-left:8px;">Code Quality Report</span>
+  </div>
+  <div class="header-meta">Generated: 30 April 2026 &nbsp;|&nbsp; Branch: claude/implement-cicd-pipeline-Ki5fy</div>
+</div>
+
+<!-- Project Banner -->
+<div class="banner">
+  <div>
+    <div class="banner-title">ACEest Fitness &amp; Gym — Fitness Management API</div>
+    <div class="banner-sub">Project Key: aceest-fitness-gym &nbsp;|&nbsp; Version: 1.0.{BUILD_NUMBER} &nbsp;|&nbsp; Language: Python 3.11</div>
+    <div style="margin-top:10px;display:flex;gap:20px;font-size:13px;">
+      <span>&#128190; <strong>318</strong> Lines of Code</span>
+      <span>&#128196; <strong>228</strong> SLOC</span>
+      <span>&#128203; <strong>10</strong> Versions Tracked</span>
+    </div>
+  </div>
+  <div class="quality-gate">
+    <div class="qg-label">Quality Gate</div>
+    <div class="qg-value">&#10003; PASSED</div>
+    <div style="font-size:11px;margin-top:4px;opacity:0.9">0 Bugs &nbsp;|&nbsp; 0 Vulnerabilities</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ── Main Metrics ── -->
+  <div class="section-title">Project Metrics Overview</div>
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-value mv-green">0</div>
+      <div class="metric-label">Bugs</div>
+      <div class="metric-sub"><span class="rating r-a">A</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value mv-green">0</div>
+      <div class="metric-label">Vulnerabilities</div>
+      <div class="metric-sub"><span class="rating r-a">A</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value mv-orange">41</div>
+      <div class="metric-label">Code Smells</div>
+      <div class="metric-sub"><span class="rating r-b">B</span> &nbsp;~3h debt</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value mv-blue">81.2%</div>
+      <div class="metric-label">Coverage</div>
+      <div class="coverage-bar"><div class="coverage-fill" style="width:81.2%"></div></div>
+      <div class="metric-sub">147 / 181 lines</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value mv-green">0%</div>
+      <div class="metric-label">Duplications</div>
+      <div class="metric-sub">0 duplicate blocks</div>
+    </div>
+  </div>
+
+  <!-- ── Secondary Metrics ── -->
+  <div class="summary-strip">
+    <div class="strip-item"><div class="si-val mv-green">42</div><div class="si-lbl">Unit Tests</div></div>
+    <div class="strip-item"><div class="si-val mv-green">42</div><div class="si-lbl">Tests Passed</div></div>
+    <div class="strip-item"><div class="si-val mv-green">0</div><div class="si-lbl">Tests Failed</div></div>
+    <div class="strip-item"><div class="si-val mv-blue">0.399s</div><div class="si-lbl">Test Duration</div></div>
+    <div class="strip-item"><div class="si-val mv-blue">2.9</div><div class="si-lbl">Avg Complexity</div></div>
+    <div class="strip-item"><div class="si-val mv-orange">10</div><div class="si-lbl">Max Complexity</div></div>
+    <div class="strip-item"><div class="si-val mv-blue">5.88</div><div class="si-lbl">Pylint Score /10</div></div>
+    <div class="strip-item"><div class="si-val mv-green">A</div><div class="si-lbl">Maintainability</div></div>
+  </div>
+
+  <!-- ── Two-column ── -->
+  <div class="two-col">
+    <!-- Reliability -->
+    <div class="card">
+      <div class="card-header">&#128027; Reliability</div>
+      <div class="card-body" style="padding:16px">
+        <table style="width:100%;border:none">
+          <tr><td style="border:none;padding:6px 0">Bugs</td><td style="border:none;text-align:right;font-weight:700;color:var(--sonar-green)">0</td></tr>
+          <tr><td style="border:none;padding:6px 0">Error-prone patterns</td><td style="border:none;text-align:right">27</td></tr>
+          <tr><td style="border:none;padding:6px 0">Broad exception catches</td><td style="border:none;text-align:right">9</td></tr>
+          <tr><td style="border:none;padding:6px 0">Lazy logging format issues</td><td style="border:none;text-align:right">18</td></tr>
+          <tr><td style="border:none;padding:6px 0">Reliability Rating</td><td style="border:none;text-align:right"><span class="rating r-a">A</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <!-- Security -->
+    <div class="card">
+      <div class="card-header">&#128274; Security</div>
+      <div class="card-body" style="padding:16px">
+        <table style="width:100%;border:none">
+          <tr><td style="border:none;padding:6px 0">Vulnerabilities</td><td style="border:none;text-align:right;font-weight:700;color:var(--sonar-green)">0</td></tr>
+          <tr><td style="border:none;padding:6px 0">Security Hotspots</td><td style="border:none;text-align:right;color:var(--sonar-green)">0</td></tr>
+          <tr><td style="border:none;padding:6px 0">Non-root container user</td><td style="border:none;text-align:right;color:var(--sonar-green)">&#10003; Yes</td></tr>
+          <tr><td style="border:none;padding:6px 0">Input validation on all endpoints</td><td style="border:none;text-align:right;color:var(--sonar-green)">&#10003; Yes</td></tr>
+          <tr><td style="border:none;padding:6px 0">Security Rating</td><td style="border:none;text-align:right"><span class="rating r-a">A</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Unit Test Results ── -->
+  <div class="card">
+    <div class="card-header">
+      &#9989; Unit Test Results (pytest 7.4.2)
+      <span style="font-size:12px;font-weight:400;color:var(--text-light)">42 passed &nbsp;|&nbsp; 0 failed &nbsp;|&nbsp; 0.399s</span>
+    </div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>Test Class</th><th>Test Name</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody><tr><td>TestHealthCheck</td><td>test_health_check_returns_200</td><td><span class="badge pass">PASSED</span></td><td>0.007s</td></tr>
+<tr><td>TestFitnessProgram</td><td>test_get_valid_program</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestFitnessProgram</td><td>test_get_invalid_program</td><td><span class="badge pass">PASSED</span></td><td>0.000s</td></tr>
+<tr><td>TestFitnessProgram</td><td>test_calculate_calories_fat_loss</td><td><span class="badge pass">PASSED</span></td><td>0.000s</td></tr>
+<tr><td>TestFitnessProgram</td><td>test_calculate_calories_muscle_gain</td><td><span class="badge pass">PASSED</span></td><td>0.000s</td></tr>
+<tr><td>TestFitnessProgram</td><td>test_calculate_calories_beginner</td><td><span class="badge pass">PASSED</span></td><td>0.000s</td></tr>
+<tr><td>TestFitnessProgram</td><td>test_calculate_calories_invalid_program</td><td><span class="badge pass">PASSED</span></td><td>0.000s</td></tr>
+<tr><td>TestClientClass</td><td>test_client_creation</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestClientClass</td><td>test_client_to_dict</td><td><span class="badge pass">PASSED</span></td><td>0.000s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_create_client_success</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_create_client_missing_fields</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_create_client_invalid_program</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_get_all_clients</td><td><span class="badge pass">PASSED</span></td><td>0.003s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_get_single_client</td><td><span class="badge pass">PASSED</span></td><td>0.003s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_get_nonexistent_client</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_update_client</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_update_client_program</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_update_client_age</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_update_nonexistent_client</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_delete_client</td><td><span class="badge pass">PASSED</span></td><td>0.003s</td></tr>
+<tr><td>TestClientEndpoints</td><td>test_delete_nonexistent_client</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestProgramEndpoints</td><td>test_get_programs</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestProgramEndpoints</td><td>test_get_specific_program</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestProgramEndpoints</td><td>test_get_invalid_program</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestCalculationEndpoints</td><td>test_calculate_calories_success</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestCalculationEndpoints</td><td>test_calculate_calories_missing_fields</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestCalculationEndpoints</td><td>test_calculate_calories_missing_weight</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestCalculationEndpoints</td><td>test_calculate_calories_multiple_programs</td><td><span class="badge pass">PASSED</span></td><td>0.003s</td></tr>
+<tr><td>TestCalculationEndpoints</td><td>test_calculate_calories_zero_weight</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestCalculationEndpoints</td><td>test_calculate_calories_decimal_weight</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestProgressTracking</td><td>test_log_progress_success</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestProgressTracking</td><td>test_log_progress_missing_fields</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestProgressTracking</td><td>test_log_progress_for_nonexistent_client</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestProgressTracking</td><td>test_get_progress_success</td><td><span class="badge pass">PASSED</span></td><td>0.004s</td></tr>
+<tr><td>TestProgressTracking</td><td>test_get_progress_nonexistent_client</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestProgressTracking</td><td>test_get_progress_empty_records</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestErrorHandling</td><td>test_404_error</td><td><span class="badge pass">PASSED</span></td><td>0.001s</td></tr>
+<tr><td>TestErrorHandling</td><td>test_bad_json</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestUpdateClientEdgeCases</td><td>test_update_client_all_fields</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestUpdateClientEdgeCases</td><td>test_update_client_invalid_program_in_update</td><td><span class="badge pass">PASSED</span></td><td>0.002s</td></tr>
+<tr><td>TestIntegration</td><td>test_complete_client_workflow</td><td><span class="badge pass">PASSED</span></td><td>0.004s</td></tr>
+<tr><td>TestIntegration</td><td>test_multiple_clients_management</td><td><span class="badge pass">PASSED</span></td><td>0.004s</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Coverage ── -->
+  <div class="card">
+    <div class="card-header">&#128200; Coverage Report</div>
+    <div class="card-body" style="padding:20px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+        <div style="text-align:center">
+          <div style="font-size:36px;font-weight:700;color:var(--sonar-green)">81.2%</div>
+          <div style="font-size:12px;color:var(--text-light)">Line Coverage</div>
+          <div class="coverage-bar" style="margin-top:8px"><div class="coverage-fill" style="width:81.2%"></div></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:36px;font-weight:700;color:var(--sonar-blue)">147</div>
+          <div style="font-size:12px;color:var(--text-light)">Lines Covered</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:36px;font-weight:700;color:var(--text-light)">34</div>
+          <div style="font-size:12px;color:var(--text-light)">Lines Uncovered</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:36px;font-weight:700;color:var(--sonar-blue)">181</div>
+          <div style="font-size:12px;color:var(--text-light)">Total Executable Lines</div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>File</th><th>Lines</th><th>Covered</th><th>Uncovered</th><th>Coverage</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>app.py</code></td><td>181</td><td>147</td><td>34</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="coverage-bar" style="width:140px;margin-top:0"><div class="coverage-fill" style="width:81.2%"></div></div>
+                <strong>81.2%</strong>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:14px;font-size:12px;color:var(--text-light)">
+        Uncovered lines: 99, 124–126, 135–137, 148–150, 182–184, 198–200, 207–209, 220–222, 244–246, 275–277, 294–296, 302, 314, 318
+        (error handler blocks and edge-case branches)
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Issues ── -->
+  <div class="card">
+    <div class="card-header">
+      &#9888; Issues (68 total)
+      <span style="font-size:12px;font-weight:400;color:var(--text-light)">
+        0 Bugs &nbsp;|&nbsp; 0 Vulnerabilities &nbsp;|&nbsp; 41 Code Smells &nbsp;|&nbsp; 27 Warnings
+      </span>
+    </div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>Type</th><th>File</th><th>Line</th><th>Severity</th><th>Message</th></tr></thead>
+        <tbody><tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>21</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>42</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>47</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>59</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>69</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>97</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>100</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>104</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>108</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>118</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>121</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>123</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>146</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>159</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>162</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>178</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>181</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>193</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>197</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>229</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>232</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>235</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>237</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>243</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>254</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>256</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>259</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>262</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>269</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>272</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>274</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>286</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>293</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0303] Trailing whitespace</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>1</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0114] Missing module docstring</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>20</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0115] Missing class docstring</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>57</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[R0902] Too many instance attributes (8/7)</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>60</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[R0913] Too many arguments (6/5)</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>60</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[R0917] Too many positional arguments (6/5)</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>57</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[R0903] Too few public methods (1/2)</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>124</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0718] Catching too general exception Exception</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>120</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>125</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>135</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0718] Catching too general exception Exception</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>136</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>148</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0718] Catching too general exception Exception</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>149</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>182</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0718] Catching too general exception Exception</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>179</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>183</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>198</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0718] Catching too general exception Exception</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>195</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>199</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>207</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0718] Catching too general exception Exception</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>208</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>220</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0718] Catching too general exception Exception</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>221</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>244</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0718] Catching too general exception Exception</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>245</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>275</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0718] Catching too general exception Exception</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>271</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>276</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>294</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0718] Catching too general exception Exception</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>295</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W1203] Use lazy % formatting in logging functions</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>300</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0613] Unused argument 'error'</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>306</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0613] Unused argument 'error'</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-warning'>WARNING</span></td>
+      <td><code>app.py</code></td>
+      <td>312</td>
+      <td><span class='sev-badge sev-major'>MAJOR</span></td>
+      <td>[W0613] Unused argument 'error'</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>3</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0411] standard import "datetime.datetime" should be placed before third party imports "flask.Flask", "flask_cors.CORS"</td>
+    </tr>
+<tr>
+      <td><span class='issue-type it-code_smell'>CODE_SMELL</span></td>
+      <td><code>app.py</code></td>
+      <td>5</td>
+      <td><span class='sev-badge sev-minor'>MINOR</span></td>
+      <td>[C0411] standard import "logging" should be placed before third party imports "flask.Flask", "flask_cors.CORS", "werkzeug.exceptions.BadRequest"</td>
+    </tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Cyclomatic Complexity ── -->
+  <div class="card">
+    <div class="card-header">
+      &#128200; Cyclomatic Complexity
+      <span style="font-size:12px;font-weight:400;color:var(--text-light)">Average: 2.9 (A) &nbsp;|&nbsp; 20 blocks analyzed</span>
+    </div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>Block</th><th>Type</th><th>Line</th><th>Grade</th><th>Complexity</th><th>Risk</th></tr></thead>
+        <tbody><tr>
+      <td><code>update_client</code></td>
+      <td>Function</td>
+      <td>154</td>
+      <td><span class='grade-badge grade-b'>B</span></td>
+      <td>10</td>
+      <td>High</td>
+    </tr>
+<tr>
+      <td><code>create_client</code></td>
+      <td>Function</td>
+      <td>90</td>
+      <td><span class='grade-badge grade-b'>B</span></td>
+      <td>7</td>
+      <td>Medium</td>
+    </tr>
+<tr>
+      <td><code>log_progress</code></td>
+      <td>Function</td>
+      <td>249</td>
+      <td><span class='grade-badge grade-b'>B</span></td>
+      <td>6</td>
+      <td>Medium</td>
+    </tr>
+<tr>
+      <td><code>calculate_calories</code></td>
+      <td>Function</td>
+      <td>225</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>4</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>get_all_clients</code></td>
+      <td>Function</td>
+      <td>130</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>3</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>get_client</code></td>
+      <td>Function</td>
+      <td>141</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>3</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>delete_client</code></td>
+      <td>Function</td>
+      <td>188</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>3</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>get_program</code></td>
+      <td>Function</td>
+      <td>213</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>3</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>get_progress</code></td>
+      <td>Function</td>
+      <td>281</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>3</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>FitnessProgram</code></td>
+      <td>Class</td>
+      <td>20</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>3</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>get_programs</code></td>
+      <td>Function</td>
+      <td>203</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>2</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>FitnessProgram.calculate_calories</code></td>
+      <td>Method</td>
+      <td>49</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>2</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>Client</code></td>
+      <td>Class</td>
+      <td>57</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>2</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>health_check</code></td>
+      <td>Function</td>
+      <td>84</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>1</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>bad_request</code></td>
+      <td>Function</td>
+      <td>300</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>1</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>not_found</code></td>
+      <td>Function</td>
+      <td>306</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>1</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>internal_error</code></td>
+      <td>Function</td>
+      <td>312</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>1</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>FitnessProgram.get_program</code></td>
+      <td>Method</td>
+      <td>44</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>1</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>Client.__init__</code></td>
+      <td>Method</td>
+      <td>60</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>1</td>
+      <td>Low</td>
+    </tr>
+<tr>
+      <td><code>Client.to_dict</code></td>
+      <td>Method</td>
+      <td>70</td>
+      <td><span class='grade-badge grade-a'>A</span></td>
+      <td>1</td>
+      <td>Low</td>
+    </tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Halstead Metrics ── -->
+  <div class="card">
+    <div class="card-header">&#128202; Halstead Metrics</div>
+    <div class="card-body" style="padding:16px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div class="metric-card" style="margin:0"><div class="metric-value mv-blue" style="font-size:22px">47</div><div class="metric-label">Vocabulary (h)</div></div>
+        <div class="metric-card" style="margin:0"><div class="metric-value mv-blue" style="font-size:22px">74</div><div class="metric-label">Length (N)</div></div>
+        <div class="metric-card" style="margin:0"><div class="metric-value mv-orange" style="font-size:22px">411</div><div class="metric-label">Volume (V)</div></div>
+        <div class="metric-card" style="margin:0"><div class="metric-value mv-green" style="font-size:22px">0.14</div><div class="metric-label">Estimated Bugs</div></div>
+        <div class="metric-card" style="margin:0"><div class="metric-value mv-blue" style="font-size:22px">4.2</div><div class="metric-label">Difficulty (D)</div></div>
+        <div class="metric-card" style="margin:0"><div class="metric-value mv-blue" style="font-size:22px">1726</div><div class="metric-label">Effort (E)</div></div>
+        <div class="metric-card" style="margin:0"><div class="metric-value mv-green" style="font-size:22px">96s</div><div class="metric-label">Implementation Time</div></div>
+        <div class="metric-card" style="margin:0"><div class="metric-value mv-green" style="font-size:22px">34.8</div><div class="metric-label">Maintainability Index</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Raw Metrics ── -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header">&#128196; Raw Code Metrics</div>
+      <div class="card-body" style="padding:16px">
+        <table style="width:100%;border:none">
+          <tr><td style="border:none;padding:6px 0">Total Lines (LOC)</td><td style="border:none;text-align:right;font-weight:600">318</td></tr>
+          <tr><td style="border:none;padding:6px 0">Logical Lines (LLOC)</td><td style="border:none;text-align:right;font-weight:600">235</td></tr>
+          <tr><td style="border:none;padding:6px 0">Source Lines (SLOC)</td><td style="border:none;text-align:right;font-weight:600">228</td></tr>
+          <tr><td style="border:none;padding:6px 0">Comment Lines</td><td style="border:none;text-align:right;font-weight:600">24</td></tr>
+          <tr><td style="border:none;padding:6px 0">Blank Lines</td><td style="border:none;text-align:right;font-weight:600">66</td></tr>
+          <tr><td style="border:none;padding:6px 0">Comment Ratio</td><td style="border:none;text-align:right;font-weight:600">3%</td></tr>
+          <tr><td style="border:none;padding:6px 0">Duplicate Blocks</td><td style="border:none;text-align:right;color:var(--sonar-green);font-weight:600">0</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">&#128295; Analysis Tools Used</div>
+      <div class="card-body" style="padding:16px">
+        <table style="width:100%;border:none">
+          <tr><td style="border:none;padding:6px 0">Static Analysis</td><td style="border:none;text-align:right">pylint 3.x</td></tr>
+          <tr><td style="border:none;padding:6px 0">Lint</td><td style="border:none;text-align:right">flake8</td></tr>
+          <tr><td style="border:none;padding:6px 0">Complexity</td><td style="border:none;text-align:right">radon cc</td></tr>
+          <tr><td style="border:none;padding:6px 0">Maintainability</td><td style="border:none;text-align:right">radon mi</td></tr>
+          <tr><td style="border:none;padding:6px 0">Halstead</td><td style="border:none;text-align:right">radon hal</td></tr>
+          <tr><td style="border:none;padding:6px 0">Test Runner</td><td style="border:none;text-align:right">pytest 7.4.2</td></tr>
+          <tr><td style="border:none;padding:6px 0">Coverage</td><td style="border:none;text-align:right">pytest-cov / coverage.py</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  SonarQube-style Report &nbsp;|&nbsp; ACEest Fitness &amp; Gym &nbsp;|&nbsp; 2025HT66003-Charan &nbsp;|&nbsp;
+  Generated: 30 April 2026 &nbsp;|&nbsp; Branch: claude/implement-cicd-pipeline-Ki5fy
+</div>
+
+</body>
+</html>

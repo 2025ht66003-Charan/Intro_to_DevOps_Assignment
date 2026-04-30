@@ -1,0 +1,53 @@
+# Canary Release — STABLE deployment (90% of traffic)
+#
+# Canary strategy: stable gets 9 replicas, canary gets 1.
+# This gives ~10% of requests to the new version.
+# Kubernetes routes by pod count since there is no native weighted routing.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-stable
+  namespace: aceest-gym
+  labels:
+    app: aceest-fitness-gym
+    track: stable
+spec:
+  replicas: 9
+  selector:
+    matchLabels:
+      app: aceest-fitness-gym
+      track: stable
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness-gym
+        track: stable
+    spec:
+      containers:
+        - name: aceest-app
+          image: your-dockerhub-username/aceest-fitness-gym:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            - name: FLASK_ENV
+              value: "production"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
