@@ -210,3 +210,6 @@ __marimo__/
 sonarqube_report.pdf
 submission_report.pdf
 download_reports.html
+sonarqube_report.html
+report.html
+test-report.xml
