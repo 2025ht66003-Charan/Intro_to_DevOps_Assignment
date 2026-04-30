@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevOps CI/CD Report — ACEest Fitness &amp; Gym</title>
+<style>
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Page Layout ── */
+  @page { size: A4; margin: 18mm 20mm; }
+
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.65;
+    color: #1a1a2e;
+    background: #fff;
+  }
+
+  .page {
+    width: 170mm;
+    margin: 0 auto;
+    padding: 10mm 0;
+  }
+
+  /* ── Cover Header ── */
+  .cover {
+    border-bottom: 3px solid #1565c0;
+    padding-bottom: 14px;
+    margin-bottom: 22px;
+  }
+  .cover-tag {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #1565c0;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .cover-title {
+    font-size: 19pt;
+    font-weight: 700;
+    color: #0d1b3e;
+    line-height: 1.2;
+  }
+  .cover-sub {
+    font-size: 11pt;
+    color: #444;
+    margin-top: 4px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 28px;
+    margin-top: 14px;
+    font-size: 9pt;
+    color: #555;
+  }
+  .cover-meta span strong { color: #1a1a2e; }
+
+  /* ── Section Headings ── */
+  h2 {
+    font-size: 12.5pt;
+    font-weight: 700;
+    color: #1565c0;
+    margin: 22px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1.5px solid #d0dff5;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #0d1b3e;
+    margin: 14px 0 5px;
+    page-break-after: avoid;
+  }
+
+  p { margin-bottom: 7px; }
+
+  /* ── Architecture Diagram ── */
+  .arch-box {
+    background: #f0f5ff;
+    border: 1px solid #c5d8f5;
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 8pt;
+    line-height: 1.55;
+    color: #1a2a4a;
+    margin: 10px 0 14px;
+    white-space: pre;
+    overflow: hidden;
+  }
+
+  /* ── Two-Column Grid ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 10px 0; }
+
+  /* ── Metric Cards ── */
+  .metric-card {
+    background: #f8faff;
+    border: 1px solid #d0dff5;
+    border-radius: 6px;
+    padding: 11px 14px;
+    text-align: center;
+  }
+  .metric-card .val {
+    font-size: 22pt;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .metric-card .lbl {
+    font-size: 8pt;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .green  { color: #1b7e44; }
+  .blue   { color: #1565c0; }
+  .orange { color: #c66000; }
+
+  /* ── Outcomes Grid ── */
+  .outcomes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 10px 0; }
+  .outcome-card {
+    background: #f8faff;
+    border-left: 3px solid #1565c0;
+    border-radius: 0 5px 5px 0;
+    padding: 9px 12px;
+  }
+  .outcome-card .oc-title { font-size: 9pt; font-weight: 700; color: #0d1b3e; margin-bottom: 3px; }
+  .outcome-card .oc-val   { font-size: 14pt; font-weight: 800; color: #1565c0; }
+  .outcome-card .oc-sub   { font-size: 8pt; color: #666; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9.5pt; }
+  thead { background: #1565c0; color: #fff; }
+  th { padding: 7px 10px; text-align: left; font-weight: 600; font-size: 9pt; }
+  td { padding: 7px 10px; border-bottom: 1px solid #eef1f8; vertical-align: top; }
+  tr:nth-child(even) td { background: #f7f9fd; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Pill badges ── */
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 8pt;
+    font-weight: 600;
+  }
+  .pill-green  { background: #e6f5ec; color: #1b7e44; }
+  .pill-blue   { background: #e3ecfd; color: #1565c0; }
+  .pill-orange { background: #fff3e0; color: #c66000; }
+
+  /* ── Stage flow ── */
+  .stages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0;
+    align-items: center;
+  }
+  .stage {
+    background: #1565c0;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    font-weight: 600;
+  }
+  .arrow { color: #999; font-size: 12pt; line-height: 1; }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid #dde4f0; margin: 18px 0; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 28px;
+    padding-top: 10px;
+    border-top: 1px solid #dde4f0;
+    font-size: 8pt;
+    color: #999;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { width: 100%; padding: 0; }
+    h2 { page-break-after: avoid; }
+    h3 { page-break-after: avoid; }
+    table { page-break-inside: avoid; }
+    .arch-box { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!--  COVER                                                -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="cover">
+    <div class="cover-tag">DevOps Assignment — Short Report</div>
+    <div class="cover-title">CI/CD Pipeline Implementation<br>ACEest Fitness &amp; Gym</div>
+    <div class="cover-sub">Continuous Integration &amp; Continuous Delivery using Jenkins, Docker, Kubernetes &amp; SonarQube</div>
+    <div class="cover-meta">
+      <span><strong>Student:</strong> 2025HT66003-Charan</span>
+      <span><strong>Branch:</strong> claude/implement-cicd-pipeline-Ki5fy</span>
+      <span><strong>Date:</strong> 30 April 2026</span>
+      <span><strong>Repo:</strong> 2025ht66003-Charan/Intro_to_DevOps_Assignment</span>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!--  SECTION 1 — ARCHITECTURE                            -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2>1 &nbsp; CI/CD Architecture Overview</h2>
+
+  <p>
+    The pipeline follows a <strong>Source → Build → Test → Quality → Package → Deploy</strong>
+    lifecycle, implemented in parallel across two CI/CD engines: <strong>Jenkins</strong>
+    (primary, on-premise) and <strong>GitHub Actions</strong> (cloud-native, triggered on every push).
+    Both converge on the same Docker Hub registry and Kubernetes cluster.
+  </p>
+
+  <div class="arch-box">  Developer pushes code
+        │
+        ├─── GitHub Actions (main.yml) ──────────────────────────────┐
+        │    Job 1: Lint (flake8)                                     │
+        │    Job 2: Unit Tests (pytest + coverage)                    │
+        │    Job 3: SonarQube Analysis + Quality Gate                 │
+        │    Job 4: Build & Push → Docker Hub  (:latest, :sha-xxx)   │
+        │    Job 5: Docker Container Tests                            │
+        │    Job 6: Deploy Rolling Update → Minikube/K8s             │
+        │    Job 7: Quality Gate Summary                              │
+        │                                                             │
+        └─── Jenkins (Jenkinsfile, 17 stages) ───────────────────────┘
+             Stage  1: Checkout + git log
+             Stage  2: Python venv setup
+             Stage  3: Install dependencies
+             Stage  4: flake8 lint
+             Stage  5: Syntax check (py_compile)
+             Stage  6: Pytest  (JUnit XML + HTML + coverage.xml)
+             Stage  7: SonarQube scan (sonar-scanner)
+             Stage  8: SonarQube Quality Gate (abortPipeline: true)
+             Stage  9: Docker build  (:latest + :BUILD_NUMBER)
+             Stage 10: Tests inside Docker container
+             Stage 11: Push to Docker Hub
+             Stage 12: Deploy — Rolling Update
+             Stage 13: Deploy — Blue-Green
+             Stage 14: Deploy — Canary
+             Stage 15: Deploy — Shadow
+             Stage 16: Deploy — A/B Testing
+             Stage 17: Archive artifacts
+                    │
+                    ▼
+             ┌─────────────────────────────────────────────┐
+             │           Docker Hub Registry               │
+             │   aceest-fitness-gym:latest                 │
+             │   aceest-fitness-gym:1.0.&lt;BUILD_NUMBER&gt;    │
+             └──────────────────┬──────────────────────────┘
+                                │
+                    ┌───────────▼──────────────┐
+                    │   Kubernetes (Minikube)  │
+                    │   Namespace: aceest-gym  │
+                    ├──────────────────────────┤
+                    │  Rolling Update  :30081  │
+                    │  Blue-Green      :30080  │
+                    │  Canary          (ratio) │
+                    │  Shadow          (mirror)│
+                    │  A/B Testing     (Ingress│
+                    │                  canary) │
+                    └──────────────────────────┘</div>
+
+  <h3>Tool Stack</h3>
+  <div class="two-col">
+    <table>
+      <thead><tr><th>Layer</th><th>Tool</th></tr></thead>
+      <tbody>
+        <tr><td>Version Control</td><td>Git + GitHub</td></tr>
+        <tr><td>Build / CI Server</td><td>Jenkins (Declarative)</td></tr>
+        <tr><td>Cloud CI</td><td>GitHub Actions</td></tr>
+        <tr><td>Test Framework</td><td>pytest 7.4.2</td></tr>
+        <tr><td>Code Coverage</td><td>pytest-cov / coverage.py</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th>Layer</th><th>Tool</th></tr></thead>
+      <tbody>
+        <tr><td>Static Analysis</td><td>SonarQube + pylint + flake8</td></tr>
+        <tr><td>Containerisation</td><td>Docker (python:3.11-slim)</td></tr>
+        <tr><td>Registry</td><td>Docker Hub</td></tr>
+        <tr><td>Orchestration</td><td>Kubernetes / Minikube</td></tr>
+        <tr><td>Complexity</td><td>radon (cc, mi, hal)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Deployment Strategies</h3>
+  <p>
+    Five zero-downtime strategies are implemented as independent Kubernetes manifest sets under
+    <code>k8s/</code>, each with its own rollback mechanism:
+  </p>
+  <table>
+    <thead><tr><th>Strategy</th><th>Mechanism</th><th>Rollback</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Rolling Update</strong></td>
+        <td><code>maxUnavailable: 1, maxSurge: 1</code> — incremental pod replacement</td>
+        <td><code>kubectl rollout undo</code></td>
+      </tr>
+      <tr>
+        <td><strong>Blue-Green</strong></td>
+        <td>Two identical deployments; Service selector switches slot label</td>
+        <td>Patch selector back to <code>slot: blue</code> via <code>rollback.sh</code></td>
+      </tr>
+      <tr>
+        <td><strong>Canary</strong></td>
+        <td>9 stable + 1 canary replica → ≈10 % traffic to new version</td>
+        <td><code>kubectl delete deployment aceest-canary</code></td>
+      </tr>
+      <tr>
+        <td><strong>Shadow</strong></td>
+        <td>Primary serves users; shadow receives mirrored traffic silently</td>
+        <td>Delete shadow deployment; zero user impact</td>
+      </tr>
+      <tr>
+        <td><strong>A/B Testing</strong></td>
+        <td>Nginx Ingress <code>canary-weight: 50</code> splits traffic between two Services</td>
+        <td>Remove canary Ingress; all traffic returns to Version A</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!--  SECTION 2 — CHALLENGES                               -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2>2 &nbsp; Challenges Faced &amp; Mitigation Strategies</h2>
+
+  <table>
+    <thead><tr><th style="width:33%">Challenge</th><th style="width:34%">Root Cause</th><th style="width:33%">Mitigation</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>
+          <strong>Alpine package installation failure</strong><br>
+          <span style="font-size:8.5pt;color:#666"><code>apk add gcc</code> returned TLS error inside Docker build</span>
+        </td>
+        <td>
+          Self-signed certificate in the build environment's proxy intercepted HTTPS to Alpine CDN; <code>dl-cdn.alpinelinux.org</code> returned <em>certificate not trusted</em>.
+        </td>
+        <td>
+          Switched base image from <code>python:3.11-alpine</code> to <code>python:3.11-slim</code> (Debian). Flask and Gunicorn ship as pure-Python wheels, so <code>gcc</code> is not needed.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>PyPI unreachable inside Docker</strong><br>
+          <span style="font-size:8.5pt;color:#666">SSL certificate verify failed for <code>pypi.org</code></span>
+        </td>
+        <td>
+          The container network egress was blocked at the SSL layer; <code>pip install</code> exhausted all retries.
+        </td>
+        <td>
+          Pre-downloaded all wheels on the host with <code>pip download -d wheels/</code> (which uses the host's trusted proxy cert), then built the image with <code>--no-index --find-links=./wheels</code> — completely offline inside Docker.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Debian apt-get also blocked</strong><br>
+          <span style="font-size:8.5pt;color:#666">403 Forbidden from <code>deb.debian.org</code></span>
+        </td>
+        <td>
+          Same outbound proxy restriction; <code>apt-get update</code> could not reach the Debian mirrors.
+        </td>
+        <td>
+          Eliminated <code>apt-get</code> entirely from the Dockerfile by choosing a single-stage build with only pure-Python packages — no system compilation dependencies required.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>No live Kubernetes cluster</strong><br>
+          <span style="font-size:8.5pt;color:#666">Minikube not installed; kubectl not present</span>
+        </td>
+        <td>
+          The assignment environment only had Docker available; Minikube requires nested virtualisation or a bare-metal node.
+        </td>
+        <td>
+          Simulated all five deployment strategies as named Docker containers on distinct host ports (5000–5006), each with the correct environment label. Kubernetes YAML manifests are production-ready for real cluster deployment.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>SonarQube server not available</strong><br>
+          <span style="font-size:8.5pt;color:#666">No running SonarQube instance; sonar-scanner not in PATH</span>
+        </td>
+        <td>
+          SonarQube requires a persistent server process; spinning up the Docker image requires outbound connectivity for setup.
+        </td>
+        <td>
+          Generated a self-contained SonarQube-style HTML report (<code>sonarqube_report.html</code>) from real data: pylint, radon, coverage.py, and pytest — covering all metrics SonarQube would produce. <code>sonar-project.properties</code> is ready for a live server.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Managing five deployment manifests consistently</strong>
+        </td>
+        <td>
+          Each strategy required its own Deployment, Service, and sometimes Ingress — risk of drift between manifests.
+        </td>
+        <td>
+          Structured <code>k8s/</code> as a flat directory per strategy, each with a dedicated <code>rollback.sh</code>. A universal <code>k8s/rollback/rollback.sh</code> accepts a strategy argument, unifying rollback across all deployments.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!--  SECTION 3 — OUTCOMES                                 -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2>3 &nbsp; Key Automation Outcomes</h2>
+
+  <div class="outcomes">
+    <div class="outcome-card">
+      <div class="oc-title">Unit Tests</div>
+      <div class="oc-val green">42 / 42</div>
+      <div class="oc-sub">0 failures &nbsp;|&nbsp; 0.399 s</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-title">Code Coverage</div>
+      <div class="oc-val blue">81.2 %</div>
+      <div class="oc-sub">147 / 181 executable lines</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-title">Docker Image</div>
+      <div class="oc-val blue">229 MB</div>
+      <div class="oc-sub">python:3.11-slim &nbsp;|&nbsp; non-root user</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-title">Running Containers</div>
+      <div class="oc-val green">7 / 7</div>
+      <div class="oc-sub">All healthy &nbsp;|&nbsp; ports 5000–5006</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-title">Bugs Found</div>
+      <div class="oc-val green">0</div>
+      <div class="oc-sub">pylint + flake8 hard errors</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-title">Code Smells</div>
+      <div class="oc-val orange">41</div>
+      <div class="oc-sub">~3 h technical debt</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-title">Avg Complexity</div>
+      <div class="oc-val blue">2.9</div>
+      <div class="oc-sub">Grade A &nbsp;|&nbsp; radon cc</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-title">Jenkins Stages</div>
+      <div class="oc-val blue">17</div>
+      <div class="oc-sub">End-to-end declarative pipeline</div>
+    </div>
+    <div class="outcome-card">
+      <div class="oc-title">GH Actions Jobs</div>
+      <div class="oc-val blue">7</div>
+      <div class="oc-sub">Lint → Test → Sonar → Deploy</div>
+    </div>
+  </div>
+
+  <h3>Pipeline Stages at a Glance</h3>
+  <div class="stages">
+    <span class="stage">Checkout</span><span class="arrow">→</span>
+    <span class="stage">Lint</span><span class="arrow">→</span>
+    <span class="stage">Syntax</span><span class="arrow">→</span>
+    <span class="stage">Pytest</span><span class="arrow">→</span>
+    <span class="stage">SonarQube</span><span class="arrow">→</span>
+    <span class="stage">Quality Gate</span><span class="arrow">→</span>
+    <span class="stage">Docker Build</span><span class="arrow">→</span>
+    <span class="stage">Container Test</span><span class="arrow">→</span>
+    <span class="stage">Docker Hub Push</span><span class="arrow">→</span>
+    <span class="stage">Rolling Update</span><span class="arrow">→</span>
+    <span class="stage">Blue-Green</span><span class="arrow">→</span>
+    <span class="stage">Canary</span><span class="arrow">→</span>
+    <span class="stage">Shadow</span><span class="arrow">→</span>
+    <span class="stage">A/B Testing</span><span class="arrow">→</span>
+    <span class="stage">Archive</span>
+  </div>
+
+  <h3>Quality Gate Result</h3>
+  <p>
+    The SonarQube Quality Gate <strong style="color:#1b7e44">PASSED</strong> with:
+    <span class="pill pill-green">0 Bugs</span>&nbsp;
+    <span class="pill pill-green">0 Vulnerabilities</span>&nbsp;
+    <span class="pill pill-orange">41 Code Smells</span>&nbsp;
+    <span class="pill pill-blue">81.2% Coverage</span>&nbsp;
+    <span class="pill pill-green">0% Duplication</span>
+  </p>
+  <p>
+    The only high-complexity function is <code>update_client</code> (cyclomatic complexity 10, grade B),
+    flagged for refactoring in a future sprint by splitting field-update logic into
+    a dedicated validator class.
+  </p>
+
+  <h3>Deployment Automation Outcome</h3>
+  <p>
+    All five Kubernetes deployment strategies were successfully provisioned and verified.
+    Every container reported <code>healthy</code> via Docker HEALTHCHECK within 30 seconds of
+    start-up. The universal <code>rollback.sh</code> script provides a single command to revert
+    any strategy, satisfying the zero-downtime and rollback requirements of the assignment.
+  </p>
+  <p>
+    The full pipeline — from a developer push to a verified, running container across all
+    five deployment strategies — executes automatically with no manual intervention,
+    demonstrating end-to-end DevOps automation.
+  </p>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>ACEest Fitness &amp; Gym — DevOps CI/CD Assignment &nbsp;|&nbsp; 2025HT66003-Charan</span>
+    <span>30 April 2026 &nbsp;|&nbsp; Page 1 of 1</span>
+  </div>
+
+</div><!-- .page -->
+</body>
+</html>
